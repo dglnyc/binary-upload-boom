@@ -1,0 +1,136 @@
+<%- include('partials/header') -%>
+<!--* server.js has [the big app!] app & the router files required to use sweet router HTTP methys in those router files  -->
+<!--* & when server.js uses *a file w/sweet router HTTP methys*, app also SETS A ROOT PATH for the router in that file [that big router!] many big routers but only one big app! -->
+<!-- "wins: order/organizion!" lol-sob! so memba to "mentally incl'd   /whatev   root" on that router's path! -->
+<!--* app.use("/someDefaultPath", filesWithSweetRouterHTTPMethys) -->
+<!-- on to [big] router in a router file, 'memba! default ROOT for path is encoded in server.js [big app!]
+REQ initially goes in to server.js, and slides into most specific path slot app.use( ____ , hereisYoRouterFile)  -->
+<!--* router.someHTTPmethy("/somePath",MW-if-any, someControlla)  // prepend the path from app.use slot aka app.use( /1stAppParmy , ____ )--> 
+<!-- aka router.get(/1stAppParmy/somePath)  so memba to mentally add on the app's path way as ROOT-->
+
+<!-- router listens for request at an enpoint aka URL, tells controlla to do their thing -->
+
+ <!-- feed and profile ejs files have user a endpoint (aka URL) in anchor tags 
+ around all cogitation images. Those URL are dynamically made using the mongo cogitation _ids as param -->
+ <!-- MONGO docys ALL have a k:v it's "_id : ###########" so the val of key _id is some long unique number -->
+
+ <!-- that unique #val is used to make the cogitation endpoint (aka URL) in EJS view -->
+ <!-- endpoint (URL) goes to a router!  our router can use that unique #val as a param!-->
+ <!--* router.get("/:id", MW, somecontrolla.getCogitation); -->
+ <!-- .getCogitation  created this ejs partial! -->
+<!--* const cogitation = await Cogitation.findById(req.params.id) -->
+<!-- but before rendering, it gave us this nice little obj called, wait for it,
+     cogitation  ! which holds the object it got from mongo [by using the endpoint params which happened, by design to be mongo's special k:v for THAT PARTICULAR cogitation]  -->
+<!-- so, cogitation ={ }  well, look in mongo db, and you'll see! console.log and you'll also see!-->
+<!-- cogitation = all the k:v's for the *cogy* docy with the id of the URL that this EJS is showing -->
+<!--  and NOTE: cogitation._id == #########  that special unique number for the cogy -->
+<!-- As you see, cogitation has _id as a key name that *includes the underscore!* -->
+<div class="container">
+  <div class="row justify-content-center mt-5">
+    <div class="col-6"> <!-- render dynamically determined cogitation title -->
+      <h2><%= cogitation.title %></h2>
+      <!-- render dynamically determined cogitation image -->
+      <img class="img-fluid" src="<%= cogitation.image%>" /> 
+      <div class="row justify-content-between"> <!-- Form to "like" this Cogitation-->
+<!-- -------------------------------------------------------------------------- -->
+      <!-- override POST w/PUT bcuz 'ya gotta' wonky //no UD in legacy HTTP CRUD -->
+<!-- lemmie //override// make that POST req.method a ?_PUT  // thanks MW app.use! -->
+<!-- using string query parmy aka boatymcboatface?   
+     oh and dynamically generate that string parmy for dis cogitation specifically-->
+     <!-- '?' questionmark  after the endpoint, with a bunch of text following is a
+       ************* URL parameter ***********************  -->
+<!-- helps more specific. identify which “resource” the API is supposed to return.  -->
+<!-- just for funsies the route is named likeCogy- see the gremlin in cogitation.js -->
+<!-- & just for weirdness, turns out ._id and .id both work! .id automagically gets created, but does NOT console.log in the cogitations array but lol-sob 'it exists, is string type' and has a value which is same val == as _id but not === string vs. object -->
+        <form method="POST" action="/cogitation/likeCogy/<%= cogitation._id %>?_method=PUT"
+          class="col-1">
+          <!-- haha it's NOT a POST above, we overrode that methy to be a PUT ! thanks MW! -->
+          <!-- see server.js file, app.use(methodOverride("_method")) & that's the big app! -->
+          <button class="btn btn-primary fa fa-heart" type="submit"></button>
+          <!-- on submit gremlin file is going to put ("/likeCogy/:12345555", tellMeControllaWhatToDo) 
+              router.put("/likeCogy/:Hid", cogitationsController.likeCogitation);-->
+          <!-- likeCogitation methy in controller folder gonna globby a hc objy {k:v} 
+            using mongos generated _id key name, and yank val from req 
+               { _id: req.params.id } **look at this cool obj** 
+          bcuz "why not?" - after submit sends req, the req.params will be the above "/likeCogy/:12345555"
+          per our gremlin, req.params is :__  in first parmy (if any), so in router.put("/likeCogy/:Hid", blahblah) 
+          "/likeCogy/:9876555"  ** /:####0  which we've dynamically generated in this ejs before submit button submits the req**
+          yoinking the mongo cogitation id_ from the url via req.params allows controlla to identify
+          mongo document which controlla gonna update k:v of likes: +1 -->
+        </form>
+<!-- -------------------------------------------------------------------------- -->        
+        <!-- render dynamically determined cogitation likes -->
+        <h3 class="col-3">Likes: <%= cogitation.likes %></h3>
+<!-- .......................................................................... -->
+        <!-- render delete button on cogitation if authorized -->
+        <!-- override POST w/DELETE bcuz 'ya gotta' wonky -->
+        <%if(cogitation.user == user.id){ %>  <!-- if auth'd user show FORM to delete this Cogitation-->
+        <!-- req.login prior to access this pg provided a passport user object [mirrors user model k:v's, id is unique key to identify users]-->
+        <!-- if  -->
+        <form action="/cogitation/deleteCogitation/<%= cogitation.id %>?_method=DELETE"method="POST"
+          class="col-3">
+          <!-- not "POST" !!! override that methy ! let's make that _methy=DELETAY!, polymorphism baby! (?) -->
+          <!-- action="/resource?_method=DELETE"> method="POST" -->
+          <button class="btn btn-primary fa fa-trash" type="submit"></button>
+<!-- & just for weirdness, turns out ._id and .id both work! .id automagically gets created, but does NOT console.log in the cogitations array but lol-sob 'it exists, is string type' and has a value which is same val == as _id but not === string vs. object -->
+        </form>
+        <!--           require('method-override')
+                      app.use(methodOverride("_method")) //costanza: "app, baby!" bigObj
+                      query string value to override the method via action
+                      ex."POST" methy via action routeYays?_method=PUT to 'override' the req.method OMG
+                        ie.  resource?_method
+          <form method="POST"  action="/resource?_method=DELETE">
+          <button type="submit">Deletetay yada</button> </form> -->
+        <%}%>
+<!-- .......................................................................... -->
+      </div>
+    </div>
+    <div class="col-3 mt-5">
+       <!-- render dynamically determined cogitation title -->
+      <p><%= cogitation.caption %></p>
+    </div>
+    <div class="col-6 mt-5">
+      <a class="btn btn-primary" href="/profile">Return to Profile</a>
+      <a class="btn btn-primary" href="/feed">Return to Feed</a>
+    </div>
+    <div>
+  
+<!-- let's make an endpoint dyanmically smooshing this cogy's unique mongo _id:#  
+     as the last part of the endpoint path! -->
+
+<!-- so we are using the cogitation object's k:v pair that this ejs's controlla 
+             assigned to cogitation from the mongo db 
+the keyname is  _id and it's value == unique mongo ####   for this cogy -->
+<!-- cogitation { } has a k:v    _id: ##########  and we use the key as per normal, oby.key -->
+
+<!-- & just for weirdness, .id DOES NOT work! that weird-mongoose-generated string won't cut it here. No MW intercepting to override the HTTP method! .id automagically gets created, and is a string type, but doesn't console.log and so it's a weirdo mongoose-generated string!  -->
+    <!--  router.post("/createComment", commentController.createComment) -->
+    <form action="/unicornComment/createComment/<%=cogitation._id%>"  method="POST">
+      <!-- <div class="mb-3"></div> <label for="titleComment" class="form-label">Title</label>
+          <input type="text" class="form-control" id="title" name="titleComment">
+      </div> -->
+      <div class="mb-3"><label for="commentText" class="form-label">Add a Comment!</label>
+        <textarea class="form-control" id="commentText" name="commentText"></textarea>
+      </div>
+      <button type="submit" class="btn btn-primary" value="Upload">Submit</button>
+    </form>
+  </div>
+  <div >
+    <div>
+      <h3>ALL COMMENTS </h3>
+      <ul class="row list-unstyled">
+<!-- the getCogitation controlla   -->
+        <% for(var i=0; i<comments.length; i++) {%>
+          <li class="col-6 justify-content-between mt-5">
+              <span><%= comments[i].commentText%></span>
+              <span>   Comment made at: <%= comments[i].createdAt.toLocaleString()%></span>
+          </li>
+        <% } %>
+
+        </ul>
+    </div>
+    </div>
+  </div>
+</div>
+
+<%- include('partials/footer') -%>

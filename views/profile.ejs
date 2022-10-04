@@ -3,42 +3,91 @@
   <div class="row mt-5">
       <div class="col-6">
           <div>
+              <!-- render dynamically determined fingy -->
               <p><strong>User Name</strong>: <%= user.userName %></p>
+                  <!-- render dynamically determined fingy -->
               <p><strong>Email</strong>: <%= user.email %></p>
+              
+              <!-- ala main.js in routes oh, u wanna... router.get("/logout", authController.logout); -->
+              <!-- see ya, bye!! -->
               <a href="/logout" class="col-3 btn btn-primary">Logout</a>
           </div>
+
           <div class="mt-5">
-            <h2>Add a post</h2>
-            <form action="/post/createPost" enctype="multipart/form-data" method="POST">
-              <div class="mb-3">
-                  <label for="title" class="form-label">Title</label>
-                  <input type="text" class="form-control" id="title" name="title">
+            <h2>Add an Entry</h2> 
+
+<!--***   ENDPOINT aka url    heard by router w. (req, res)     upon SUBMIT button 
+    const cogitationRoutes = require("./routes/cogitations")  //server.js
+    app.use("/cogitation", cogitationRoutes)                 //server.js
+      //cogitations router file code below [per server.js code "/cogitations" is ROOT so implicit in path]       
+    router.post("/createCogitation", upload.single("file"), cogitationsController.createCogitation) -->
+<!--  oh hi MW multer, gonna do some validation for imgs I see: upload.single("file") -->
+      <!-- router.post("/createCogitation"),mw,controlla.methy)  
+            per server.js, app gonna use "/cogitation" for root on all cogitation controllas
+                 router.post gremlin hears the endpoint "/cogitation/createCogitation", mw kicks in, then router moves req on to controlla  -->
+            <form action="/cogitation/createCogitation" enctype="multipart/form-data" method="POST">
+              <div class="mb-3"></div> <label for="title" class="form-label">Title</label>
+                  <input type="text" class="form-control" id="title" name="titleyay">
               </div>
-              <div class="mb-3">
-                <label for="caption" class="form-label">Caption</label>
+              <div class="mb-3"><label for="caption" class="form-label">Caption</label>
                 <textarea class="form-control" id="caption" name="caption"></textarea>
               </div>
-              <div class="mb-3">
-                <label for="imgUpload" class="form-label">Image</label>
+           <!-- hola! on submit there's some MW w/parmy amazingMW.methy("file") so we throw in 'file'! ok!
+            gremlin.post("/yada",amazingMW.someMethy("passMeInBaby"), blablaControlla) -->
+              <div class="mb-3"><label for="imgUpload" class="form-label">Image</label>
                 <input type="file" class="form-control" id="imageUpload" name="file">
               </div>
               <button type="submit" class="btn btn-primary" value="Upload">Submit</button>
             </form>
-          </div>
+            <!-- so now that we've submitted 
+              and assumably got past that required in router multer MW ("file")  // is that type check multer docies someday
+              router.post("/createCogitation", upload.single("file"), cogitationsController.createCogitation) -->
+              <!-- what's this controlla gonna do!?! cogitationsController.createCogitation -->
+              <!-- controlla gonna async   await picy to cloudinary heyo resulty
+              then await Cogitation.create  cuz Cogitation model was required
+              req.body has yummy form inputs, got that resulty for the img & cloudinaryId thingy
+              likes we gonna make wholecloth set to 0,  
+              and OMG req.user what is this awesomeness?!??
+                  title: req.body.title, image: result.secure_url, cloudinaryId: result.public_id, 
+                  caption: req.body.caption, likes: 0, user: req.user.id
+                then redir to same page  hello routes!-->
+          </div> 
+      </div>
+      <div class="row justify-content-center mt-5">
+        <a class="btn btn-primary" href="/feed">Return to Feed</a>
       </div>
       <div class="col-6">
         <ul class="row list-unstyled">
-        <% for(var i=0; i<posts.length; i++) {%>
+    <!--  from .getProfile controlla that renders page, 
+      assigns array called cogitations to hold db docys w/{k:v} hc'd (thanks for the req.user info passport! hella useful!) -->
+      <!-- *const cogitations = await Cogitation.find({ user: req.user.id });
+      *res.render("profile.ejs", { cogitations: cogitations, user: req.user }); -->
+      <!-- hey res take this second parmy oby w/2 k:v's I smooshed up 
+      hc'ing keys and vals poped in from memba that array called cogitations I made of db docys of this user, also let's throw in a user:hellaThanksPassport -->
+      <!-- so, it's kind of confusing, but key name is same as value variable name
+      hahaha like, that's supposed to make it more clear simple clean. rolf lol sob! -->
+      <!-- anyway, now u know what cogitations is randoName holding an array of the user's cogy docys from the db -->
+      <!-- let's iterate thru them, to display them, shall we? Yes! let's do that! -->
+      <% for(var i=0; i<cogitations.length; i++) {%> 
+        <!-- start w/array element 0 -->
           <li class="col-6 justify-content-between mt-5">
-            <a href="/post/<%= posts[i]._id%>">
-              <img class="img-fluid" src="<%= posts[i].image%>">
+            <!-- alright, new cool stuff! each of this user's cogy's will be in an anchor tag
+            and each URL obviously has to be specific to each cogy, so...
+            let's make that URL dyanamically! and to ensure that it's totes unique...
+            mongo gave each cogy that sweet sweet mongo _id key (not in the model schema! it comes as a freebie/required k:v that mongo makes in cloud!)
+            our cogy array is from db, so it's 100% def gonna have it. It's 100% unique so...perfect! -->
+            <a href="/cogitation/<%= cogitations[i].id%>">  
+              <!-- we have a router for this endpoint above don't we? why yes, of course we do! and a controlla! -->
+              <img class="img-fluid" src="<%= cogitations[i].image%>">
+              <!-- and, relatively simple, we're gonna pop in the cogy array element's image key
+        fyi & tmi - k:v the val for each cogy's image key is 'https://res.cloudinary.com/blahblahblah
+        when each cogy is created by that controlla, we assign result to hold the awaited cloudinary returned oby, which had a secure_url key
+                  image: result.secure_url  k:v -->
             </a>
           </li>
         <% } %>
         </ul>
-        <div class="row justify-content-center mt-5">
-          <a class="btn btn-primary" href="/feed">Return to Feed</a>
-        </div>  
+          
       </div>  
     </div>
   </div>
